@@ -20,13 +20,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		$error_message = $e->getMessage();
 		echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
 	}
-	if (empty($result["FailedAttempts"]) || $result["FailedAttempts"] == 0) {
-		$username = $_POST['username'];
-		$password = $_POST['password'];
-		if ($_POST['username'] === 'ansible' && $_POST['password'] === 'abc123') {
-			$login = True;
+	if (!empty($result["FailedAttempts"]) || $result["FailedAttempts"] != 0) {
+		sleep($result["FailedAttempts"]);
+	}
+	$username = $_POST['username'];
+	$password = $_POST['password'];
+	if ($_POST['username'] === 'ansible' && $_POST['password'] === 'abc123') {
+		$login = True;
+		try {
+			$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), 0);';
+			$dbquery = $myDBconnection -> prepare($query);
+			$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
+			$dbquery -> bindValue(':user', $username); 
+			$dbquery -> bindValue(':pass', $password);
+			$dbquery -> execute();
+		} catch (PDOException $e) {
+			$error_message = $e->getMessage();
+			echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
+		}
+	} else {
+		try {
+			$query = 'SELECT FailedAttempts FROM authentication WHERE IP=:ip ORDER BY ID DESC LIMIT 1;';
+			$dbquery = $myDBconnection -> prepare($query);
+			$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
+			$dbquery -> execute();
+			$result = $dbquery -> fetch();
+		} catch (PDOException $e) {
+			$error_message = $e->getMessage();
+			echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
+		}
+		if (empty($result["FailedAttempts"])) {
 			try {
-				$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), 0);';
+				$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), 1);';
 				$dbquery = $myDBconnection -> prepare($query);
 				$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
 				$dbquery -> bindValue(':user', $username); 
@@ -37,51 +62,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 				echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
 			}
 		} else {
+			$result["FailedAttempts"] = $result["FailedAttempts"] + 1;
 			try {
-				$query = 'SELECT FailedAttempts FROM authentication WHERE IP=:ip ORDER BY ID DESC LIMIT 1;';
+				$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), :result);';
 				$dbquery = $myDBconnection -> prepare($query);
 				$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
+				$dbquery -> bindValue(':user', $username); 
+				$dbquery -> bindValue(':pass', $password);
+				$dbquery -> bindValue(':result', $result["FailedAttempts"]);
 				$dbquery -> execute();
-				$result = $dbquery -> fetch();
 			} catch (PDOException $e) {
 				$error_message = $e->getMessage();
 				echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
 			}
-			if (empty($result["FailedAttempts"])) {
-				try {
-					$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), 1);';
-					$dbquery = $myDBconnection -> prepare($query);
-					$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
-					$dbquery -> bindValue(':user', $username); 
-					$dbquery -> bindValue(':pass', $password);
-					$dbquery -> execute();
-				} catch (PDOException $e) {
-					$error_message = $e->getMessage();
-					echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
-				}
-			} else {
-				$result["FailedAttempts"] = $result["FailedAttempts"] + 1;
-				try {
-					$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), :result);';
-					$dbquery = $myDBconnection -> prepare($query);
-					$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
-					$dbquery -> bindValue(':user', $username); 
-					$dbquery -> bindValue(':pass', $password);
-					$dbquery -> bindValue(':result', $result["FailedAttempts"]);
-					$dbquery -> execute();
-				} catch (PDOException $e) {
-					$error_message = $e->getMessage();
-					echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
-				}
-				// if ($result["FailedAttempts"] >= 1) {
-					// sleep($result["FailedAttempts"]);
-				// }
-			}
 		}
 	} 
-	// else {
-		// sleep($result["FailedAttempts"]);
-	// }
 }
 
 ?>
