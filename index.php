@@ -11,7 +11,7 @@ $password = "";
 require_once 'database.php'; 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	try {
-		$query = 'SELECT FailedAttempts FROM authentication WHERE IP=:ip; ORDER BY ID DESC LIMIT 1;';
+		$query = 'SELECT FailedAttempts FROM authentication WHERE IP=:ip ORDER BY ID DESC LIMIT 1;';
 		$dbquery = $myDBconnection -> prepare($query);
 		$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
 		$dbquery -> execute();
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			}
 		} else {
 			try {
-				$query = 'SELECT FailedAttempts FROM authentication WHERE IP=:ip; ORDER BY ID DESC LIMIT 1;';
+				$query = 'SELECT FailedAttempts FROM authentication WHERE IP=:ip ORDER BY ID DESC LIMIT 1;';
 				$dbquery = $myDBconnection -> prepare($query);
 				$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
 				$dbquery -> execute();
@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 					$dbquery -> bindValue(':ip', $_SERVER['REMOTE_ADDR']);
 					$dbquery -> bindValue(':user', $username); 
 					$dbquery -> bindValue(':pass', $password);
+					$dbquery -> bindValue(':result', $result);
 					$dbquery -> execute();
-					$result = $dbquery -> fetch();
 				} catch (PDOException $e) {
 					$error_message = $e->getMessage();
 					echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
