@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		$error_message = $e->getMessage();
 		echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
 	}
-	if (empty($result) || $result == 0) {
+	if (empty($result["FailedAttempts"]) || $result["FailedAttempts"] == 0) {
 		$username = $_POST['username'];
 		$password = $_POST['password'];
 		if ($_POST['username'] === 'ansible' && $_POST['password'] === 'abc123') {
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 				$error_message = $e->getMessage();
 				echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
 			}
-			if (empty($result)) {
+			if (empty($result["FailedAttempts"])) {
 				try {
 					$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), 1);';
 					$dbquery = $myDBconnection -> prepare($query);
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 					echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
 				}
 			} else {
-				$result = $result + 1;
+				$result["FailedAttempts"] = $result["FailedAttempts"] + 1;
 				try {
 					$query = 'INSERT INTO authentication (IP, Username, Password, Date, FailedAttempts) VALUES (:ip, :user, :pass, NOW(), :result);';
 					$dbquery = $myDBconnection -> prepare($query);
@@ -73,13 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 					$error_message = $e->getMessage();
 					echo "<p>An error occurred while trying to retrieve data from the table: $error_message </p>";
 				}
-				if ($result >= 1) {
-					sleep($result);
+				if ($result["FailedAttempts"] >= 1) {
+					sleep($result["FailedAttempts"]);
 				}
 			}
 		}
 	} else {
-		sleep($result);
+		sleep($result["FailedAttempts"]);
 	}
 }
 
