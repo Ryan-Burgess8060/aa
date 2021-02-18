@@ -3,7 +3,8 @@
 // 2/17/21
 // Attacking Authentication
 // 
-// 
+// I used a database to keep track of the ip of the user sending failed attempts. For every failed attempt, I set a sleep function to stall the code for 1 second per failed attempt. I also set it to record what usernames and passwords the ip is sending to see what was causing the failed attempts and maybe be able to see what kind of brute force attack was being attempted
+// With this prevention method, it now takes () to get the correct username and password combination.
 
 $login = False;
 $username = "";
